@@ -1,151 +1,55 @@
 Makemoji SDK
 ====================
 
-![](http://i.imgur.com/ctHChYR.png)
+![](http://i.imgur.com/mMZQ9b7.png)
 
-**Makemoji** is a free emoji keyboard for mobile apps. A 3rd party app installs our keyboard SDK and every user of that app will instantly have new emojis and more to talk about. Our goal is to increase user engagement as well as provide actionable real time data on sentiment (how users feel) and affinity (what users like). Because apps can now collect sentiment & affinity data in addition to age, gender and location... they will know more about their user base and their per-user valuation & company valuation will increase they second they implement our SDK. We also provide an extensive library of free emojis (in addition to iOS/Android’s 722 standard Unicode emojis) that are updated daily with trending emojis. New emojis are loaded in seamlessly through an Internet connection and do not require the user to update the app.
+**Makemoji** is a free emoji keyboard for mobile apps. 
 
-To obtain your SDK key please email: sdk@makemoji.com
+By installing our keyboard SDK every user of your app will instantly have access to new and trending emojis. Our goal is to increase user engagement as well as provide actionable real time data on sentiment (how users feel) and affinity (what users like). With this extensive data collection your per-user & company valuation will increase along with your user-base.
+ 
+**Features Include**
 
-Library Setup
+* Extensive library of free emoji
+* 722 standard Unicode emoji
+* Makemoji *Flashtag* inline search system
+
+![](http://i.imgur.com/RHEXBbO.gif)
+
+* New emoji load dynamically and does not require a app update
+* Analytics Dashboard & CMS
+
+To obtain your SDK key please visit: http://makemoji.com
+
+**[Learn More](http://makemoji.com)**
+
+**[Documentation and Walkthroughs](http://makemoji.com/docs/)**
+
+
+
+FAQ
 ---------------------
-1. If you are already using CocoaPods, add the following pods to your Podfile.
 
-		pod "AFNetworking"
-		pod "SDWebImage"
+*	The Makemoji SDK is completely free.
 
-2. If your are not using CocoaPods, be sure to include the following libraries.
-		
-		AFNetworking - https://github.com/AFNetworking/AFNetworking
-		SDWebImage - https://github.com/rs/SDWebImage
+*	All emojis are served from AWS S3.
 
-3. Drag the MakemojiSDK folder to your project.
+*	We do not store your messages. Your app backend will have to process and serve messages created with our SDK.
 
-3. In Xcode, click on your App Target -> Build Phases -> Link Binary with Libraries and add the following libraries.
+*	We do not send push notifications.
 
-![](http://i.imgur.com/N7HL7Iu.png)
+*	Your app's message volume does not affect the performance of our SDK.
 
-		libsqlite3
-		libxml2
-		libz
+*	Messages are composed of simple HTML containing image and paragraph tags. Formatting is presented as inline CSS.
 
-SDK Usage
+*	Will work with any built-in iOS keyboard or return type
+
+*  All network operations happen asyncronously and do not block the User Interface
+
+Service Performance
 ---------------------
-To start using the MakemojiSDK you will first have to setup your API key in your AppDelegate 
 
-```objectivec
+* Avg Service Response Time: 100ms
+ 
+* Hosted with AWS using Elastic Beanstalk & RDS
 
-	- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-	    // Override point for customization after application launch.
-
-	    // setup your SDK key
-	    [MakemojiSDK setSDKKey:@"YOUR-SDK-KEY"];
-	    
-	    return YES;
-	}
-
-```
-
-Next you will need to subclass MEChatViewController. This controller has a tableview that you can use for your chat and automatically handles resizing views for showing the keyboard.
-
-```objectivec
-
-	#import <UIKit/UIKit.h>
-	#import "MEChatViewController.h"
-
-	@interface ViewController : MEChatViewController
-
-```
-
-This view controller also has several callback methods that you will need to override
-
-The didTapSend callback gives you a dictionary of plaintext and HTML from the MakemojiSDK text view when the Send button is tapped.
-
-```objectivec
-
-	-(void)didTapSend:(NSDictionary *)messageDictionary {
-	    NSLog(@"Your Message - %@", messageDictionary);
-	    [self.messages addObject:messageDictionary];
-	    [self.tableView reloadData];
-	    
-	    // scroll the table view to the bottom
-	    [self scrollToBottom];
-	}
-
-```
-
-You can show or hide the built-in camera button by returning a boolean on the hasCameraButton method
-
-```objectivec
-
-	// show / hide Camera Button
-	-(BOOL)hasCameraButton {
-	    return YES;
-	}
-
-```
-
-To handle a action for the camera button, override the didTapCamera method
-
-```objectivec
-
-	// handle camera action
-	-(void)didTapCamera {
-
-	}
-
-```
-
-To handle the display of a webpage tapping on a Hypermoji ( a emoji with a URL link) override the didTapHypermoji method
-
-```objectivec
-
-	// handle tapping of links (Hypermoji)
-	-(void)didTapHypermoji:(NSString*)urlString {
-	    NSLog(@"%@", urlString);
-	}
-
-```
-
-We have included a optimized table view cell for displaying HTML messages. To use this table cell, you should use the following:
-
-Using the rowHeightForHTML method gives the row height for a message
-
-```objectivec
-
-	- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-	    NSDictionary * message = [self.messages objectAtIndex:indexPath.row];
-	    return [self rowHeightForHTML:[message objectForKey:@"html"] atIndexPath:indexPath];
-	}
-
-```
-
-You can set the MEChatTableViewCell to display on the left or right hand side using setCellDisplay. This should happen before setting your HTML for each message.
-
-```objectivec
-
-	- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-	    static NSString *CellIdentifier = @"Cell";
-	    
-	    MEChatTableViewCell  *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
-	    
-	    if (cell == nil) {
-	        cell = [[MEChatTableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
-	    }
-	    
-	    // display chat cell on right side
-	    [cell setCellDisplay:MECellDisplayRight];
-
-	    // display chat cell on left side
-	    if (indexPath.row % 2) {
-	        [cell setCellDisplay:MECellDisplayLeft];
-	    }
-	    
-	    NSDictionary * message = [self.messages objectAtIndex:indexPath.row];
-	    [cell setHTMLString:[message objectForKey:@"html"]];
-	    
-	    return cell;
-	}
-
-```
-
+* Scales seamlessly to meet traffic demands
